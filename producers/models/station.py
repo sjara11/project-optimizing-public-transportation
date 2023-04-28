@@ -39,8 +39,6 @@ class Station(Producer):
             topic_name,
             key_schema=Station.key_schema,
             value_schema=Station.value_schema, # TODO: Uncomment once schema is defined
-            # num_partitions=self.num_partitions,
-            # num_replicas=self.num_replicas,
         )
 
         self.station_id = int(station_id)
