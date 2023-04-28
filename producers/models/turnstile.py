@@ -45,20 +45,23 @@ class Turnstile(Producer):
         num_entries = self.turnstile_hardware.get_entries(timestamp, time_step)
         # TODO: Complete this function by emitting a message to the turnstile topic for the number of entries that were calculated
         try:
+            key_payload={"timestamp": self.time_millis()}
+            value_payload={
+                "station_id":self.station.station_id,
+                "station_name": self.station.name,
+                "line": self.station.color
+                # TODO: Configure this
+            }
             for entry in range(num_entries):
                 self.producer.produce(
-                topic=self.topic_name,
-                key={"timestamp": self.time_millis()},
-                value={
-                    "station_id":self.station.station_id,
-                    "station_name": self.station.name,
-                    "line": self.station.color
-                    # TODO: Configure this
-                },
-                value_schema=self.value_schema,
-                key_schema=self.key_schema
+                    topic=self.topic_name,
+                    key=key_payload,
+                    value=value_payload,
+                    value_schema=self.value_schema,
+                    key_schema=self.key_schema
                 )
                 logger.info("entry kafka integration creating an event")
         except Exception as e:
             logger.info(f"error: {e}")
+            logger.info(f"event structure generating the error - key: {key_payload} / value: {value_payload}")
             logger.info("entry kafka integration incomplete - skipping")
