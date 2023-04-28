@@ -34,17 +34,17 @@ class Station(Producer):
         # TODO: Complete the below by deciding on a topic name, number of partitions, and number of replicas
         #
         #
-        topic_name = f"{self.station_id}_{station_name}_arrivals" # TODO: Come up with a better topic name
+        topic_name = f"{station_name}_arrivals" # TODO: Come up with a better topic name
         super().__init__(
             topic_name,
             key_schema=Station.key_schema,
             value_schema=Station.value_schema, # TODO: Uncomment once schema is defined
-            num_partitions=self.num_partitions,
-            num_replicas=self.num_replicas,
+            # num_partitions=self.num_partitions,
+            # num_replicas=self.num_replicas,
         )
 
         self.station_id = int(station_id)
-        self.color = color
+        self.color =str(color)
         self.dir_a = direction_a
         self.dir_b = direction_b
         self.a_train = None
@@ -59,25 +59,30 @@ class Station(Producer):
         # TODO: Complete this function by producing an arrival message to Kafka
         #
         #
-        try:
-            self.producer.produce(
-            topic=self.topic_name,
-            key={"timestamp": self.time_millis()},
-            value={
+        key_payload = {"timestamp": self.time_millis()}
+        value_payload = {
                 "station_id":self.station_id,
-                "train_id": train,
+                "train_id": train.train_id,
                 "direction": direction,
                 "line": self.color,
-                "train_status": train.status,
+                "train_status": str(train.status),
                 "prev_station_id":prev_station_id,
                 "prev_direction":prev_direction
                 # TODO: Configure this
-            },
+            }
+        
+        try:
+            self.producer.produce(
+            topic=self.topic_name,
+            key=key_payload,
+            value=value_payload,
             value_schema=self.value_schema,
             key_schema=self.key_schema
             )
             logger.info("arrival kafka integration creating an event")
-        except:
+        except Exception as e:
+            logger.info(f"error: {e}")
+            logger.info(f"event structure generating the error - key: {key_payload} / value: {value_payload}")
             logger.info("arrival kafka integration incomplete - skipping")
 
     def __str__(self):
