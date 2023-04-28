@@ -3,9 +3,9 @@ import logging
 import time
 
 
-from confluent_kafka import avro, CachedSchemaRegistryClient
+from confluent_kafka import avro
 from confluent_kafka.admin import AdminClient, NewTopic
-from confluent_kafka.avro import AvroProducer
+from confluent_kafka.avro import AvroProducer, CachedSchemaRegistryClient
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +38,7 @@ class Producer:
         #
         #
         self.broker_properties = {
-            "broker_url":"PLAINTEXT://localhost:9092,PLAINTEXT://localhost:9093,PLAINTEXT://localhost:9094",
+            "broker_url":"PLAINTEXT://localhost:9092",
             "schema_registry_url":"http://localhost:8081"
         }
 
@@ -61,10 +61,12 @@ class Producer:
         # the Kafka Broker.
         try: 
             topic_list = []
-            NewTopic(name=f"{self.topic_name}", num_partitions=self.num_partitions, replication_factor=self.num_replicas)
-            AdminClient.create_topics(new_topics=topic_list)
+            topic_list.append(NewTopic(topic=f"{self.topic_name}", num_partitions=self.num_partitions, replication_factor=self.num_replicas))
+            kafka_client = AdminClient({"bootstrap.servers": self.broker_properties.get("broker_url")})
+            kafka_client.create_topics(new_topics=topic_list)
             logger.info(f"topic creation kafka integration complete - topic: {self.topic_name} created")
-        except:
+        except Exception as e:
+            logger.info(f"error: {e}")
             logger.info("topic creation kafka integration incomplete - skipping")
 
     def time_millis(self):
@@ -76,8 +78,9 @@ class Producer:
         #
         # TODO: Write cleanup code for the Producer here
         try:
-            self.producer.flush(10)
-            logger.info("producer close begin")
+            if self.producer: 
+                self.producer.flush(10)
+                logger.info("producer close begin")
         except:
             logger.info("producer close incomplete - skipping")
         finally:
