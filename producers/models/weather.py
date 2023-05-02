@@ -37,7 +37,7 @@ class Weather(Producer):
         #
         #
         super().__init__(
-            "weather", # TODO: Come up with a better topic name
+            topic_name = "weather_readings", # TODO: Come up with a better topic name
             key_schema=Weather.key_schema,
             value_schema=Weather.value_schema,
         )
@@ -79,34 +79,29 @@ class Weather(Producer):
         # specify the Avro schemas and verify that you are using the correct Content-Type header.
         #
         #
-        logger.info("weather kafka proxy integration incomplete - skipping")
-        #resp = requests.post(
-        #    #
-        #    #
-        #    # TODO: What URL should be POSTed to?
-        #    #
-        #    #
-        #    f"{Weather.rest_proxy_url}/TODO",
-        #    #
-        #    #
-        #    # TODO: What Headers need to bet set?
-        #    #
-        #    #
-        #    headers={"Content-Type": "TODO"},
-        #    data=json.dumps(
-        #        {
-        #            #
-        #            #
-        #            # TODO: Provide key schema, value schema, and records
-        #            #
-        #            #
-        #        }
-        #    ),
-        #)
-        #resp.raise_for_status()
+        try:
+            resp = requests.post(f"{Weather.rest_proxy_url}/topics/{self.topic_name}",
+                                headers={"Content-Type": "application/vnd.kafka.avro.v2+json"},
+                                # TODO: Provide key schema, value schema, and records
+                                data=json.dumps(
+                                    {
+                                        "key_schema": self.key_schema,
+                                        "value_schema" : self.value_schema,
+                                        "records": [{
+                                            "key": {"timestamp": self.time_millis()},
+                                            "value": {"temperature": self.temp,"status": self.status}}
+                                    ]}
+                                    ),
+                                )
+            # TODO: What URL should be POSTed to?
+            # TODO: What Headers need to bet set?
+            resp.raise_for_status()
 
-        logger.debug(
-            "sent weather data to kafka, temp: %s, status: %s",
-            self.temp,
-            self.status.name,
-        )
+            logger.debug(
+                "sent weather data to kafka, temp: %s, status: %s",
+                self.temp,
+                self.status.name,
+            )
+        except Exception as e:
+            logger.info(f"error: {e}")
+            logger.info("weather kafka proxy integration incomplete - skipping")
