@@ -37,7 +37,7 @@ class Weather(Producer):
         #
         #
         super().__init__(
-            topic_name = "weather_readings", # TODO: Come up with a better topic name
+            topic_name="weather_readings", # TODO: Come up with a better topic name
             key_schema=Weather.key_schema,
             value_schema=Weather.value_schema,
         )
@@ -71,43 +71,31 @@ class Weather(Producer):
         self.status = random.choice(list(Weather.status))
 
     def run(self, month):
-        self._set_weather(month)
-
-        #
-        #
-        # TODO: Complete the function by posting a weather event to REST Proxy. Make sure to
-        # specify the Avro schemas and verify that you are using the correct Content-Type header.
-        #
-        #
+        
         try:
-            payload = json.dumps(
+            self._set_weather(month)
+            # TODO: Complete the function by posting a weather event to REST Proxy. Make sure to
+            resp = requests.post(
+            # TODO: What URL should be POSTed to?
+            f"{Weather.rest_proxy_url}/topics/{self.topic_name}",
+            # TODO: What Headers need to bet set?
+            headers={"Content-Type": "application/vnd.kafka.avro.v2+json"},
+            data=json.dumps(
                 {
                     "key_schema": json.dumps(Weather.key_schema),
-                    "value_schema" : json.dumps(Weather.value_schema),
-                    "records": [{
-                        "key": {"timestamp": self.time_millis()},
-                        "value": {
-                            "temperature": self.temp,
-                            "status": self.status}}
-                                ]}
-                )
-
-            resp = requests.post(f"{Weather.rest_proxy_url}/topics/{self.topic_name}",
-                                headers={"Content-Type": "application/vnd.kafka.avro.v2+json"},
-                                # TODO: Provide key schema, value schema, and records
-                                data = payload
-                                # data=json.dumps(
-                                #     {
-                                #         "key_schema": self.key_schema,
-                                #         "value_schema" : self.value_schema,
-                                #         "records": [{
-                                #             "key": {"timestamp": self.time_millis()},
-                                #             "value": {"temperature": self.temp,"status": self.status}}
-                                #     ]}
-                                #     ),
-                                )
-            # TODO: What URL should be POSTed to?
-            # TODO: What Headers need to bet set?
+                    "value_schema": json.dumps(Weather.value_schema),
+                    "records": [
+                        {
+                            "key": {"timestamp": self.time_millis()},
+                            "value": {
+                                "temperature": self.temp,
+                                "status": self.status.name,
+                            }
+                            }
+                        ]
+                }
+            ),
+            )
             resp.raise_for_status()
 
             logger.debug(
@@ -116,6 +104,5 @@ class Weather(Producer):
                 self.status.name,
             )
         except Exception as e:
-            logger.info(f"error: {e}")
-            logger.info(payload)
+            logger.info(e)
             logger.info("weather kafka proxy integration incomplete - skipping")
