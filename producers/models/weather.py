@@ -80,18 +80,31 @@ class Weather(Producer):
         #
         #
         try:
+            payload = json.dumps(
+                {
+                    "key_schema": json.dumps(Weather.key_schema),
+                    "value_schema" : json.dumps(Weather.value_schema),
+                    "records": [{
+                        "key": {"timestamp": self.time_millis()},
+                        "value": {
+                            "temperature": self.temp,
+                            "status": self.status}}
+                                ]}
+                )
+
             resp = requests.post(f"{Weather.rest_proxy_url}/topics/{self.topic_name}",
                                 headers={"Content-Type": "application/vnd.kafka.avro.v2+json"},
                                 # TODO: Provide key schema, value schema, and records
-                                data=json.dumps(
-                                    {
-                                        "key_schema": self.key_schema,
-                                        "value_schema" : self.value_schema,
-                                        "records": [{
-                                            "key": {"timestamp": self.time_millis()},
-                                            "value": {"temperature": self.temp,"status": self.status}}
-                                    ]}
-                                    ),
+                                data = payload
+                                # data=json.dumps(
+                                #     {
+                                #         "key_schema": self.key_schema,
+                                #         "value_schema" : self.value_schema,
+                                #         "records": [{
+                                #             "key": {"timestamp": self.time_millis()},
+                                #             "value": {"temperature": self.temp,"status": self.status}}
+                                #     ]}
+                                #     ),
                                 )
             # TODO: What URL should be POSTed to?
             # TODO: What Headers need to bet set?
@@ -104,4 +117,5 @@ class Weather(Producer):
             )
         except Exception as e:
             logger.info(f"error: {e}")
+            logger.info(payload)
             logger.info("weather kafka proxy integration incomplete - skipping")
