@@ -37,7 +37,7 @@ topic = app.topic("connect-chicago-stations", value_type=Station)
 out_topic = app.topic("stations-transformed", partitions=1)
 # TODO: Define a Faust Table
 table = app.Table(
-   "stations-filtered-table",
+   "stations-transformed",
    default=TransformedStation,
    partitions=1,
    changelog_topic=out_topic,
