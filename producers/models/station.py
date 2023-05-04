@@ -42,7 +42,7 @@ class Station(Producer):
         )
 
         self.station_id = int(station_id)
-        self.color =str(color)
+        self.color = color
         self.dir_a = direction_a
         self.dir_b = direction_b
         self.a_train = None
@@ -62,8 +62,8 @@ class Station(Producer):
                 "station_id":self.station_id,
                 "train_id": train.train_id,
                 "direction": direction,
-                "line": self.color,
-                "train_status": str(train.status),
+                "line": self.color.name,
+                "train_status": train.status.name,
                 "prev_station_id":prev_station_id,
                 "prev_direction":prev_direction
                 # TODO: Configure this
