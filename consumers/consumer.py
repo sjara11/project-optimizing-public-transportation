@@ -90,14 +90,18 @@ class KafkaConsumer:
         # Additionally, make sure you return 1 when a message is processed, and 0 when no message
         # is retrieved.
         try:
-            message = self.consumer.poll()
-            if message:
-                return 1
+            message = self.consumer.poll(1.0)
+            if message is None:
+                logger.info(f"no message received")
+                return 0
             elif message.error() is not None:
                 logger.info(f"error from the consumer: {message.error()}")
+                return 0
             else:
-                logger.info(f"no message received")
+                self.message_handler(message)
+                return 1
         except Exception as e:
+            logger.info(e)
             logger.info("_consume is incomplete - skipping")
             return 0
 
