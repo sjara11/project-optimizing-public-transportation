@@ -52,7 +52,8 @@ def configure_connector():
                                 )
                 )
             logger.info("connector code completed connector created")
-            
+            return
+        
         except Exception as e:
             logger.info(f"error: {e}")
             logger.info("connector code not completed skipping connector creation")
